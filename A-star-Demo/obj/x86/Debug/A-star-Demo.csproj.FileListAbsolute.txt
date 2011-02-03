@@ -3,9 +3,6 @@ c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-sta
 c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\bin\Debug\OpenTK.Compatibility.dll
 c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\bin\Debug\OpenTK.dll
 c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\bin\Debug\OpenTK.GLControl.dll
-c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\bin\Debug\OpenTK.xml
-c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\bin\Debug\OpenTK.Compatibility.xml
-c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\bin\Debug\OpenTK.GLControl.xml
 c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\obj\x86\Debug\ResolveAssemblyReference.cache
 c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\obj\x86\Debug\A_star_Demo.AstarInterface.resources
 c:\documents and settings\stephan\my documents\visual studio 2010\Projects\A-star-Demo\A-star-Demo\obj\x86\Debug\A_star_Demo.Properties.Resources.resources

@@ -111,19 +111,13 @@ namespace A_star_Demo.Graphics
 			lock (map)
 			{
 				GL.Color3(0.0, 0.0, 1.0);
-				foreach (List<List<MapNode>> xBucket in map.actualMap)
+				foreach (WorldMap.BlockInfo info in map)
 				{
-					foreach (List<MapNode> yBucket in xBucket)
+					if (info.status.HasFlag(MapNode.Status.isWall))
 					{
-						foreach (MapNode zNode in yBucket)
-						{
-							if (zNode.currentStatus.HasFlag(MapNode.Status.isWall))
-							{
-								GL.Translate(zNode.x, zNode.y, zNode.z);
-								GL.DrawElements(BeginMode.Triangles, cubeHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-								GL.Translate(-zNode.x, -zNode.y, -zNode.z);
-							}
-						}
+						GL.Translate(info.x, info.y, info.z);
+						GL.DrawElements(BeginMode.Triangles, cubeHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
+						GL.Translate(-info.x, -info.y, -info.z);
 					}
 				}
 				if (map.start != null)
@@ -139,16 +133,20 @@ namespace A_star_Demo.Graphics
 						GL.Color3(0.0, 1.0, 0.0);
 						GL.DrawElements(BeginMode.Triangles, pyramidHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
 						GL.Translate(-map.goal.Item1, -map.goal.Item2, -map.goal.Item3);
-						MapNode cache = map.actualMap[map.goal.Item1][map.goal.Item2][map.goal.Item3];
+
 						GL.Color3(1.0, 0.0, 0.0);
 						GL.Disable(EnableCap.Lighting);
-						while (cache != map.start && cache.currentPredesessorNode != null)
+						if (map.path.Any())
 						{
-							GL.Begin(BeginMode.Lines);
-							GL.Vertex3(cache.x, cache.y, cache.z);
-							GL.Vertex3(cache.currentPredesessorNode.x, cache.currentPredesessorNode.y, cache.currentPredesessorNode.z);
-							GL.End();
-							cache = cache.currentPredesessorNode;
+							LinkedListNode<WorldMap.BlockInfo> cache = map.path.First;
+							while (cache.Next != null)
+							{
+								GL.Begin(BeginMode.Lines);
+								GL.Vertex3(cache.Value.x, cache.Value.y, cache.Value.z);
+								GL.Vertex3(cache.Next.Value.x, cache.Next.Value.y, cache.Next.Value.z);
+								GL.End();
+								cache = cache.Next;
+							}
 						}
 					}
 					else GL.Disable(EnableCap.Lighting);
