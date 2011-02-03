@@ -502,7 +502,7 @@ namespace A_star_Demo.A_star_Algorithm
 			cache.currentStatus ^= A_star_Algorithm.MapNode.Status.isWall;
 
 			//If there is any path information, the start is closed.
-			if (actualMap[start.Item1][start.Item2][start.Item3].currentStatus.HasFlag(MapNode.Status.isClosed))
+			if (start != null && actualMap[start.Item1][start.Item2][start.Item3].currentStatus.HasFlag(MapNode.Status.isClosed))
 				reinitializeMap();
 			else cache.initializeNode(goal, false);
 		}
