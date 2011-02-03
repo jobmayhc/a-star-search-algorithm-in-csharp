@@ -51,7 +51,6 @@
 			this.glControl1.TabIndex = 0;
 			this.glControl1.VSync = false;
 			this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
-			this.glControl1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.glControl1_KeyDown);
 			// 
 			// textBox1
 			// 
@@ -157,10 +156,12 @@
 			this.Controls.Add(this.ClearMap);
 			this.Controls.Add(this.textBox1);
 			this.Controls.Add(this.glControl1);
+			this.KeyPreview = true;
 			this.Name = "AstarInterface";
 			this.Text = "A* Demo";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AstarInterface_FormClosing);
 			this.Load += new System.EventHandler(this.AstarInterface_Load);
+			this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.AstarInterface_KeyDown);
 			((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
 			this.SizeOfMap.ResumeLayout(false);
 			this.SizeOfMap.PerformLayout();

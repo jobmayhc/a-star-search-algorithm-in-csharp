@@ -5,7 +5,7 @@ using System.Text;
 
 namespace A_star_Demo.A_star_Algorithm
 {
-	class WorldMap
+	partial class WorldMap : IEnumerable<WorldMap.BlockInfo>
 	{
 		[Flags]
 		private enum AddedNeighbours
@@ -58,10 +58,7 @@ namespace A_star_Demo.A_star_Algorithm
 					}
 				}
 			}
-			if (start != null)
-			{
-
-			}
+			path = new LinkedList<BlockInfo>();
 		}
 
 		/// <summary>
@@ -433,6 +430,24 @@ namespace A_star_Demo.A_star_Algorithm
 					}
 				}
 			}
+			path.Clear();
+		}
+
+		public IEnumerator<WorldMap.BlockInfo> GetEnumerator()
+		{
+			foreach (List<List<MapNode>> xBucket in actualMap)
+			{
+				foreach (List<MapNode> yBucket in xBucket)
+				{
+					foreach (MapNode zNode in yBucket)
+						yield return new WorldMap.BlockInfo(zNode.x, zNode.y, zNode.z, zNode.currentStatus);
+				}
+			}
+		}
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 
 		/// <summary>
@@ -475,12 +490,30 @@ namespace A_star_Demo.A_star_Algorithm
 			}
 		}
 
-		public List<List<List<MapNode>>> actualMap = new List<List<List<MapNode>>>();
+		/// <summary>
+		/// Changes whether the provided block is a wall or not.
+		/// </summary>
+		/// <param name="whatX">The x coordinate of the block. Null based.</param>
+		/// <param name="whatY">The y coordinate of the block. Null based.</param>
+		/// <param name="whatZ">The z coordinate of the block. Null based.</param>
+		public void toggleWall(int whatX, int whatY, int whatZ)
+		{
+			MapNode cache = actualMap[whatX][whatY][whatZ];
+			cache.currentStatus ^= A_star_Algorithm.MapNode.Status.isWall;
 
+			//If there is any path information, the start is closed.
+			if (actualMap[start.Item1][start.Item2][start.Item3].currentStatus.HasFlag(MapNode.Status.isClosed))
+				reinitializeMap();
+			else cache.initializeNode(goal, false);
+		}
+
+		public LinkedList<BlockInfo> path { get; private set; }
 		public bool canBarelyPassBlocks { get; set; }
 		public int xSizeCache { get; private set; }
 		public int ySizeCache { get; private set; }
 		public int zSizeCache { get; private set; }
+
+		private List<List<List<MapNode>>> actualMap = new List<List<List<MapNode>>>();
 		private Tuple<int, int, int> _goal;
 		private Tuple<int, int, int> _start;
 	}

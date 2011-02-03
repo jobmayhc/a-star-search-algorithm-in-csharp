@@ -46,80 +46,9 @@ namespace A_star_Demo
 		{
 			lock (map)
 			{
-				A_star_Algorithm.Searcher.searchPathOnMap(map);
+				A_star_Algorithm.WorldMap.Searcher.searchPathOnMap(map);
 				Renderer.sendMessage(Graphics.Renderer.RMessage.Reblit);
 			}
-		}
-
-		private void glControl1_KeyDown(object sender, KeyEventArgs e)
-		{
-			if (e.KeyCode == Keys.W)
-			{
-				if (selector.Y != map.ySizeCache - 1)
-				{
-					selector.Y += 1.0;
-					Renderer.selector = selector;
-				}
-			}
-			if (e.KeyCode == Keys.A)
-			{
-				if (selector.X != 0)
-				{
-					selector.X -= 1.0;
-					Renderer.selector = selector;
-				}
-			}
-			if (e.KeyCode == Keys.S)
-			{
-				if (selector.Y != 0)
-				{
-					selector.Y -= 1.0;
-					Renderer.selector = selector;
-				}
-			}
-			if (e.KeyCode == Keys.D)
-			{
-				if (selector.X != map.xSizeCache - 1)
-				{
-					selector.X += 1.0;
-					Renderer.selector = selector;
-				}
-			}
-			if (e.KeyCode == Keys.T)
-			{
-				if (selector.Z != map.zSizeCache - 1)
-				{
-					selector.Z += 1.0;
-					Renderer.selector = selector;
-				}
-			}
-			if (e.KeyCode == Keys.G)
-			{
-				if (selector.Z != 0)
-				{
-					selector.Z -= 1.0;
-					Renderer.selector = selector;
-				}
-			}
-			if (e.KeyCode == Keys.Space)
-			{
-				lock (map)
-				{
-					if (Wall.Checked)
-					{
-						map.actualMap[(int)selector.X][(int)selector.Y][(int)selector.Z].currentStatus ^= A_star_Algorithm.MapNode.Status.isWall;
-					}
-					if (Start.Checked)
-					{
-						map.start = new Tuple<int, int, int>((int)selector.X, (int)selector.Y, (int)selector.Z);
-					}
-					if (Goal.Checked)
-					{
-						map.goal = new Tuple<int, int, int>((int)selector.X, (int)selector.Y, (int)selector.Z);
-					}
-				}
-			}
-			Renderer.sendMessage(Graphics.Renderer.RMessage.Reblit);
 		}
 
 		private void ClearMap_Click(object sender, EventArgs e)
@@ -131,6 +60,80 @@ namespace A_star_Demo
 				map.start = null;
 				Renderer.sendMessage(Graphics.Renderer.RMessage.Reblit);
 			}
+		}
+
+		private void AstarInterface_KeyDown(object sender, KeyEventArgs e)
+		{
+			e.Handled = true;
+			if (e.KeyCode == Keys.W)
+			{
+				if (selector.Y != map.ySizeCache - 1)
+				{
+					selector.Y += 1.0;
+					Renderer.selector = selector;
+				}
+			}
+			else if (e.KeyCode == Keys.A)
+			{
+				if (selector.X != 0)
+				{
+					selector.X -= 1.0;
+					Renderer.selector = selector;
+				}
+			}
+			else if (e.KeyCode == Keys.S)
+			{
+				if (selector.Y != 0)
+				{
+					selector.Y -= 1.0;
+					Renderer.selector = selector;
+				}
+			}
+			else if (e.KeyCode == Keys.D)
+			{
+				if (selector.X != map.xSizeCache - 1)
+				{
+					selector.X += 1.0;
+					Renderer.selector = selector;
+				}
+			}
+			else if (e.KeyCode == Keys.T)
+			{
+				if (selector.Z != map.zSizeCache - 1)
+				{
+					selector.Z += 1.0;
+					Renderer.selector = selector;
+				}
+			}
+			else if (e.KeyCode == Keys.G)
+			{
+				if (selector.Z != 0)
+				{
+					selector.Z -= 1.0;
+					Renderer.selector = selector;
+				}
+			}
+			else if (e.KeyCode == Keys.Space)
+			{
+				lock (map)
+				{
+					if (Wall.Checked)
+					{
+						map.toggleWall((int)selector.X, (int)selector.Y, (int)selector.Z);
+					}
+					if (Start.Checked)
+					{
+						map.start = new Tuple<int, int, int>((int)selector.X, (int)selector.Y, (int)selector.Z);
+					}
+					if (Goal.Checked)
+					{
+						map.goal = new Tuple<int, int, int>((int)selector.X, (int)selector.Y, (int)selector.Z);
+					}
+				}
+			}
+			else e.Handled = false;
+			if (e.Handled)
+				Renderer.sendMessage(Graphics.Renderer.RMessage.Reblit);
 		}
 	}
 }

@@ -36,15 +36,15 @@
   <ItemGroup>
     <Reference Include="OpenTK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files\OpenTK\1.0\Binaries\OpenTK\Release\OpenTK.dll</HintPath>
+      <HintPath>Libraries\OpenTK\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK.Compatibility, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files\OpenTK\1.0\Binaries\OpenTK\Release\OpenTK.Compatibility.dll</HintPath>
+      <HintPath>Libraries\OpenTK\OpenTK.Compatibility.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK.GLControl, Version=1.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files\OpenTK\1.0\Binaries\OpenTK\Release\OpenTK.GLControl.dll</HintPath>
+      <HintPath>Libraries\OpenTK\OpenTK.GLControl.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,7 +59,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="A-star-Algorithm\MapNode.cs" />
-    <Compile Include="A-star-Algorithm\Searcher.cs" />
+    <Compile Include="A-star-Algorithm\WorldMap.BlockInfo.cs" />
+    <Compile Include="A-star-Algorithm\WorldMap.Searcher.cs" />
     <Compile Include="A-star-Algorithm\WorldMap.cs" />
     <Compile Include="AstarInterface.cs">
       <SubType>Form</SubType>
