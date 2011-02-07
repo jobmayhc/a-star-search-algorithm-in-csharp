@@ -29,7 +29,7 @@
 		private void InitializeComponent()
 		{
 			this.glControl1 = new OpenTK.GLControl();
-			this.textBox1 = new System.Windows.Forms.TextBox();
+			this.textOutput = new System.Windows.Forms.TextBox();
 			this.ClearMap = new System.Windows.Forms.Button();
 			this.CalculatePath = new System.Windows.Forms.Button();
 			this.checkedListBox1 = new System.Windows.Forms.CheckedListBox();
@@ -52,14 +52,15 @@
 			this.glControl1.VSync = false;
 			this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
 			// 
-			// textBox1
+			// textOutput
 			// 
-			this.textBox1.Location = new System.Drawing.Point(12, 498);
-			this.textBox1.Multiline = true;
-			this.textBox1.Name = "textBox1";
-			this.textBox1.ReadOnly = true;
-			this.textBox1.Size = new System.Drawing.Size(640, 56);
-			this.textBox1.TabIndex = 1;
+			this.textOutput.Location = new System.Drawing.Point(12, 498);
+			this.textOutput.Multiline = true;
+			this.textOutput.Name = "textOutput";
+			this.textOutput.ReadOnly = true;
+			this.textOutput.Size = new System.Drawing.Size(640, 56);
+			this.textOutput.TabIndex = 1;
+			this.textOutput.Text = "Controls are WASD ( TG ) for movement and space for confirmation.";
 			// 
 			// ClearMap
 			// 
@@ -84,10 +85,13 @@
 			// checkedListBox1
 			// 
 			this.checkedListBox1.FormattingEnabled = true;
+			this.checkedListBox1.Items.AddRange(new object[] {
+            "Barely pass walls"});
 			this.checkedListBox1.Location = new System.Drawing.Point(658, 213);
 			this.checkedListBox1.Name = "checkedListBox1";
 			this.checkedListBox1.Size = new System.Drawing.Size(122, 109);
 			this.checkedListBox1.TabIndex = 7;
+			this.checkedListBox1.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBox1_ItemCheck);
 			// 
 			// Wall
 			// 
@@ -154,7 +158,7 @@
 			this.Controls.Add(this.checkedListBox1);
 			this.Controls.Add(this.CalculatePath);
 			this.Controls.Add(this.ClearMap);
-			this.Controls.Add(this.textBox1);
+			this.Controls.Add(this.textOutput);
 			this.Controls.Add(this.glControl1);
 			this.KeyPreview = true;
 			this.Name = "AstarInterface";
@@ -173,7 +177,7 @@
 		#endregion
 
 		private OpenTK.GLControl glControl1;
-		private System.Windows.Forms.TextBox textBox1;
+		private System.Windows.Forms.TextBox textOutput;
 		private System.Windows.Forms.Button ClearMap;
 		private System.Windows.Forms.Button CalculatePath;
 		private System.Windows.Forms.CheckedListBox checkedListBox1;
