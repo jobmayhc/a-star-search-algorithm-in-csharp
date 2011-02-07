@@ -127,31 +127,34 @@ namespace A_star_Demo.Graphics
 					GL.Color3(1.0, 0.0, 0.0);
 					GL.DrawElements(BeginMode.Triangles, pyramidHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
 					GL.Translate(-map.start.Item1, -map.start.Item2, -map.start.Item3);
-					if (map.goal != null)
-					{
-						GL.Translate(map.goal.Item1, map.goal.Item2, map.goal.Item3);
-						GL.Color3(0.0, 1.0, 0.0);
-						GL.DrawElements(BeginMode.Triangles, pyramidHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-						GL.Translate(-map.goal.Item1, -map.goal.Item2, -map.goal.Item3);
-
-						GL.Color3(1.0, 0.0, 0.0);
-						GL.Disable(EnableCap.Lighting);
-						if (map.path.Any())
-						{
-							LinkedListNode<WorldMap.BlockInfo> cache = map.path.First;
-							while (cache.Next != null)
-							{
-								GL.Begin(BeginMode.Lines);
-								GL.Vertex3(cache.Value.x, cache.Value.y, cache.Value.z);
-								GL.Vertex3(cache.Next.Value.x, cache.Next.Value.y, cache.Next.Value.z);
-								GL.End();
-								cache = cache.Next;
-							}
-						}
-					}
-					else GL.Disable(EnableCap.Lighting);
 				}
-				else GL.Disable(EnableCap.Lighting);
+
+				if (map.goal != null)
+				{
+					//This should be much cheaper than just binding the VAO again.
+					if (map.start == null)
+						GL.BindVertexArray(pyramidHandle.VAOName);
+
+					GL.Translate(map.goal.Item1, map.goal.Item2, map.goal.Item3);
+					GL.Color3(0.0, 1.0, 0.0);
+					GL.DrawElements(BeginMode.Triangles, pyramidHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
+					GL.Translate(-map.goal.Item1, -map.goal.Item2, -map.goal.Item3);
+				}
+
+				GL.Color3(1.0, 0.0, 0.0);
+				GL.Disable(EnableCap.Lighting);
+				if (map.path.Any())
+				{
+					LinkedListNode<WorldMap.BlockInfo> cache = map.path.First;
+					while (cache.Next != null)
+					{
+						GL.Begin(BeginMode.Lines);
+						GL.Vertex3(cache.Value.x, cache.Value.y, cache.Value.z);
+						GL.Vertex3(cache.Next.Value.x, cache.Next.Value.y, cache.Next.Value.z);
+						GL.End();
+						cache = cache.Next;
+					}
+				}
 			}
 			//Needed to avoid GL.Translates to mismatch because the selector has been changed in between.
 			//The selector uses the renderTask for access.
