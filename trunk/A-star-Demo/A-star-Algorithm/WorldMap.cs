@@ -7,6 +7,10 @@ namespace A_star_Demo.A_star_Algorithm
 {
 	partial class WorldMap : IEnumerable<WorldMap.BlockInfo>
 	{
+		/// <summary>
+		/// Data structure for remembering what nodes have already been added. This is used to avoid barely passing ( "scratching" ) walls
+		/// in case canBarelyPassBlocks isnt set.
+		/// </summary>
 		[Flags]
 		private enum AddedNeighbours
 		{
@@ -31,6 +35,14 @@ namespace A_star_Demo.A_star_Algorithm
 			Diagonal2DLowerYLowerZ = 1 << 17
 		}
 
+		/// <summary>
+		/// Creates a rasterized map with the given size and start parameters.
+		/// </summary>
+		/// <param name="xSize">Amount of blocks in x dimension</param>
+		/// <param name="ySize">Amount of blocks in y dimension</param>
+		/// <param name="zSize">Amount of blocks in z dimension</param>
+		/// <param name="whatStart">An optional initial start</param>
+		/// <param name="whatGoal">An optional initial goal</param>
 		public WorldMap(int xSize, int ySize, int zSize, Tuple<int,int,int> whatStart = null, Tuple<int,int,int> whatGoal = null)
 		{
 			_start = whatStart;
@@ -413,11 +425,11 @@ namespace A_star_Demo.A_star_Algorithm
 			return neighbours;
 		}
 
-
 		/// <summary>
 		/// Resets the map and recalculates the minimal distance to the goal on each node if a new goal was given.
 		/// </summary>
-		/// <param name="newGoal">The new goal</param>
+		/// <param name="newGoal">The new goal or null if there is none or no change</param>
+		/// <param name="clearMap">Whether to clear all wall info</param>
 		public void reinitializeMap(Tuple<int,int,int> newGoal = null, bool clearMap = false)
 		{
 			foreach (List<List<MapNode>> xBucket in actualMap)
@@ -433,6 +445,10 @@ namespace A_star_Demo.A_star_Algorithm
 			path.Clear();
 		}
 
+		/// <summary>
+		/// Ability to iterare over all blocks and get information about them.
+		/// </summary>
+		/// <returns>Information about all blocks in the map one after another</returns>
 		public IEnumerator<WorldMap.BlockInfo> GetEnumerator()
 		{
 			foreach (List<List<MapNode>> xBucket in actualMap)

@@ -7,6 +7,9 @@ namespace A_star_Demo.A_star_Algorithm
 {
 	class MapNode
 	{
+		/// <summary>
+		/// Possible additional information about a block
+		/// </summary>
 		[Flags]
 		public enum Status : byte
 		{
@@ -15,7 +18,14 @@ namespace A_star_Demo.A_star_Algorithm
 			isClosed = (byte) 1 << 2
 		}
 
-		public MapNode(int whatX, int whatY, int whatZ, Tuple<int,int,int> goal)
+		/// <summary>
+		/// Creates a node for a map with the given position and optional initial goal.
+		/// </summary>
+		/// <param name="whatX">The x position of the node</param>
+		/// <param name="whatY">The y position of the node</param>
+		/// <param name="whatZ">The z position of the node</param>
+		/// <param name="goal">Optional initial information about the current goal on the map</param>
+		public MapNode(int whatX, int whatY, int whatZ, Tuple<int,int,int> goal = null)
 		{
 			x = whatX;
 			y = whatY;
@@ -31,10 +41,18 @@ namespace A_star_Demo.A_star_Algorithm
 		{
 			get
 			{
-				return (currentShortestPathToNode ?? 0) + minimalDistanceToGoal;
+				//Cannot calculate the f value if the distance to the node is not known
+				if (currentShortestPathToNode == null)
+					throw new NullReferenceException("Tried to access \"possibleDistanceToGoal\" without a set current shortest distance to this node.");
+				return (int)currentShortestPathToNode + minimalDistanceToGoal;
 			}
 		}
 
+		/// <summary>
+		/// Clears search information on the node and resets it to an initial status
+		/// </summary>
+		/// <param name="goal">optional new goal if it changed</param>
+		/// <param name="clearStatus">whether to clear all status and therfore whether it is a wall aswell</param>
 		public void initializeNode(Tuple<int,int,int> goal = null, bool clearStatus = true)
 		{
 			currentPredesessorNode = null;
@@ -91,6 +109,10 @@ namespace A_star_Demo.A_star_Algorithm
 			return x ^ y ^ z;
 		}
 
+		/// <summary>
+		/// Calculates a minimal distance to the goal assuming a direct connection using only possible steps ( diagonal3d, diagonal2d and straight )
+		/// </summary>
+		/// <param name="goal">The goal to calculate the distance to</param>
 		private void calculateMinimalDistanceToGoal(Tuple<int,int,int> goal)
 		{
 			//Calculate the minimalDistance
