@@ -19,9 +19,13 @@ namespace A_star_Demo.Graphics
 			Reblit
 		}
 
+		/// <summary>
+		/// Generates a renderthread and graphics related data structures
+		/// </summary>
+		/// <param name="whatControl">The GLControl to use for rendering</param>
+		/// <param name="whatMap">The map to render in the control</param>
 		public Renderer(GLControl whatControl, WorldMap whatMap)
 		{
-			Console.WriteLine("asdf");
 			if (whatMap == null)
 				throw new ArgumentNullException("whatMap", "Cannot render a non-existing map");
 			map = whatMap;
@@ -29,6 +33,8 @@ namespace A_star_Demo.Graphics
 				throw new ArgumentNullException("whatControl", "Cannot use a non-existing GLControl for rendering");
 			GLControl = whatControl;
 			GLControl.Context.MakeCurrent(null);
+
+			//Currently hardcoded camera position
 			lock (whatMap)
 			{
 				camera = new Camera(
@@ -38,6 +44,9 @@ namespace A_star_Demo.Graphics
 			renderTask = Task.Factory.StartNew(rendererMain, TaskCreationOptions.LongRunning);
 		}
 
+		/// <summary>
+		/// Need to stop and release the render thread
+		/// </summary>
 		public void Dispose()
 		{
 			sendMessage(RMessage.Abort);
@@ -46,6 +55,10 @@ namespace A_star_Demo.Graphics
 			renderTask.Dispose();
 		}
 
+		/// <summary>
+		/// Sends a message to the rendering thread.
+		/// </summary>
+		/// <param name="whatMessage">The message to send</param>
 		public void sendMessage(RMessage whatMessage)
 		{
 			lock (messageQueue)
@@ -55,22 +68,33 @@ namespace A_star_Demo.Graphics
 			}
 		}
 
+		/// <summary>
+		/// The render thread. This is the owner of the GLControl and does the actual loop for reblitting.
+		/// </summary>
 		private void rendererMain()
 		{
+			//Make the GLControl current on this thread
 			GLControl.MakeCurrent();
+
+			//Enable all necessary GL captions
 			GL.Enable(EnableCap.DepthTest);
 			GL.DepthFunc(DepthFunction.Lequal);
 			GL.Enable(EnableCap.ColorMaterial);
 			GL.Light(LightName.Light0, LightParameter.Diffuse, OpenTK.Graphics.Color4.White);
 			GL.Light(LightName.Light0, LightParameter.Position, new Vector4(8.0f, 8.0f, -1.0f, 1.0f));
 			GL.Enable(EnableCap.Light0);
+
 			setupViewport();
+
+			//Create the VAOs for several graphic objects
 			cubeHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Cube);
 			pyramidHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Pyramid);
 			gridHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Grid, 20, 15, 1);
 			selectorGrid = new DataStructures.VBOHandle(DataStructures.ObjectName.Grid, 1, 1, 1, 1.3f, 1.3f, 1.3f);
+
 			RMessage current;
 
+			//The main loop for rendering. Check and wait for messages and process them
 			do
 			{
 				lock (messageQueue)
@@ -87,12 +111,17 @@ namespace A_star_Demo.Graphics
 						break;
 				}
 			}while (!(current == RMessage.Abort));
+
+			//Release VAOs
 			cubeHandle.Dispose();
 			pyramidHandle.Dispose();
 			gridHandle.Dispose();
 			selectorGrid.Dispose();
 		}
 
+		/// <summary>
+		/// Renders the entire scene and updates it on the screen.
+		/// </summary>
 		private void reblit()
 		{
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);

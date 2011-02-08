@@ -7,6 +7,9 @@ namespace A_star_Demo.A_star_Algorithm
 {
 	partial class WorldMap
 	{
+		/// <summary>
+		/// Information about blocks in a map that can publically be obtained. This is can i.e. be used for printing the map.
+		/// </summary>
 		public struct BlockInfo
 		{
 			public BlockInfo(int whatX, int whatY, int whatZ, MapNode.Status whatStatus)
