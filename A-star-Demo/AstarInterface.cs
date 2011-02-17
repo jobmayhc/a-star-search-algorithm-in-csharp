@@ -84,8 +84,8 @@ namespace A_star_Demo
 
 		private void AstarInterface_Load(object sender, EventArgs e)
 		{
-			map = new A_star_Algorithm.WorldMap(20, 15, 1, new Tuple<int, int, int>(0, 0, 0), new Tuple<int, int, int>(19, 14, 0));
-			Renderer = new Graphics.Renderer(glControl1, map);
+			map = new A_star_Algorithm.WorldMap(4, 3, 1, new Tuple<int, int, int>(0, 0, 0), new Tuple<int, int, int>(2, 2, 0));
+			Renderer = new Graphics.Renderer(glControl1, map, this);
 			rendererOnline = true;
 		}
 
@@ -102,9 +102,6 @@ namespace A_star_Demo
 		{
 			Renderer.Dispose();
 		}
-
-		private A_star_Algorithm.WorldMap map;
-		private Vector3d selector = new Vector3d(0.0, 0.0, 0.0);
 
 		private void CalculatePath_Click(object sender, EventArgs e)
 		{
@@ -144,52 +141,59 @@ namespace A_star_Demo
 		{
 			e.Handled = true;
 			e.SuppressKeyPress = true;
+			Vector3d cache;
 			if (e.KeyCode == Keys.W)
 			{
 				if (selector.Y != map.ySizeCache - 1)
 				{
-					selector.Y += 1.0;
-					Renderer.selector = selector;
+					cache = selector;
+					cache.Y += 1.0;
+					selector = cache;
 				}
 			}
 			else if (e.KeyCode == Keys.A)
 			{
 				if (selector.X != 0)
 				{
-					selector.X -= 1.0;
-					Renderer.selector = selector;
+					cache = selector;
+					cache.X -= 1.0;
+					selector = cache;
 				}
 			}
 			else if (e.KeyCode == Keys.S)
 			{
 				if (selector.Y != 0)
 				{
-					selector.Y -= 1.0;
-					Renderer.selector = selector;
+					cache = selector;
+					cache.Y -= 1.0;
+					selector = cache;
 				}
 			}
 			else if (e.KeyCode == Keys.D)
 			{
 				if (selector.X != map.xSizeCache - 1)
 				{
-					selector.X += 1.0;
-					Renderer.selector = selector;
+					cache = selector;
+					cache.X += 1.0;
+					selector = cache;
 				}
 			}
 			else if (e.KeyCode == Keys.T)
 			{
 				if (selector.Z != map.zSizeCache - 1)
 				{
-					selector.Z += 1.0;
-					Renderer.selector = selector;
+					cache = selector;
+					cache.Z += 1.0;
+					selector = cache;
 				}
 			}
 			else if (e.KeyCode == Keys.G)
 			{
 				if (selector.Z != 0)
 				{
-					selector.Z -= 1.0;
-					Renderer.selector = selector;
+					cache = selector;
+					cache.Z -= 1.0;
+					selector = cache;
 				}
 			}
 			else if (e.KeyCode == Keys.Space)
@@ -238,5 +242,46 @@ namespace A_star_Demo
 		/// This is because checkedListBox only accepts strings, this is a bit stupid.
 		/// </summary>
 		private const string CAN_BARELY_PASS_WALLS = "Barely pass walls";
+
+		private void trackBar1_Scroll(object sender, EventArgs e)
+		{
+			lock (map)
+			{
+				map.resizeMap(4 * trackBar1.Value, 3 * trackBar1.Value, 1);
+				if (selector.X > map.xSizeCache)
+				{
+					selector = new Vector3d(map.xSizeCache - 1, selector.Y, selector.Z);
+				}
+				if (selector.Y > map.ySizeCache)
+				{
+					selector = new Vector3d(selector.X, map.ySizeCache - 1, selector.Z);
+				}
+				if (selector.Z > map.zSizeCache)
+				{
+					selector = new Vector3d(selector.X, selector.Y, map.zSizeCache - 1);
+				}
+			}
+			Renderer.sendMessage(Graphics.Renderer.RMessage.Reblit);
+		}
+
+		private A_star_Algorithm.WorldMap map;
+		public Vector3d selector
+		{
+			get
+			{
+				lock (Wall)
+				{
+					return _selector;
+				}
+			}
+			private set
+			{
+				lock (Wall)
+				{
+					_selector = value;
+				}
+			}
+		}
+		private Vector3d _selector = new Vector3d(0.0, 0.0, 0.0);
 	}
 }
