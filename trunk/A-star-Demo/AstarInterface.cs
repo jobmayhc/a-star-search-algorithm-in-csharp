@@ -105,7 +105,7 @@ namespace A_star_Demo
 
 		private void CalculatePath_Click(object sender, EventArgs e)
 		{
-			bool foundPath = false;
+			A_star_Algorithm.WorldMap.Searcher.SearchResult searchResult = A_star_Algorithm.WorldMap.Searcher.SearchResult.None;
 			bool startOrGoalMissing = false;
 			lock (map)
 			{
@@ -113,15 +113,27 @@ namespace A_star_Demo
 					startOrGoalMissing = true;
 				else
 				{
-					foundPath = A_star_Algorithm.WorldMap.Searcher.searchPathOnMap(map);
+					searchResult = A_star_Algorithm.WorldMap.Searcher.searchPathOnMap(map);
 					Renderer.sendMessage(Graphics.Renderer.RMessage.Reblit);
 				}
 			}
 			if (!startOrGoalMissing)
 			{
-				if (foundPath)
-					postMessage("A shortest path has been calculated.");
-				else postMessage("No path could be found.");
+				switch (searchResult)
+				{
+					case A_star_Algorithm.WorldMap.Searcher.SearchResult.FoundPath:
+						postMessage("A shortest path has been calculated.");
+						break;
+					case A_star_Algorithm.WorldMap.Searcher.SearchResult.None:
+						postMessage("No path could be found.");
+						break;
+					case A_star_Algorithm.WorldMap.Searcher.SearchResult.FoundPath | A_star_Algorithm.WorldMap.Searcher.SearchResult.MapHasAlreadyBeenSearched:
+						postMessage("An existing path was found, likely because this map has been searched before.");
+						break;
+					case A_star_Algorithm.WorldMap.Searcher.SearchResult.MapHasAlreadyBeenSearched:
+						postMessage("No path could be found and the map was not in a ready state. Have you searched it before?");
+						break;
+				}
 			}
 			else postMessage("Please set both start and goal before trying to calculate a path.");
 		}
