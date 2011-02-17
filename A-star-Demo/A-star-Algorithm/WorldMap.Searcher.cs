@@ -12,17 +12,29 @@ namespace A_star_Demo.A_star_Algorithm
 		/// </summary>
 		public static class Searcher
 		{
+			[Flags]
+			public enum SearchResult
+			{
+				/// <summary>
+				/// This is equivalent to none of the other options, meaning no path has been found and the map hasnt been altered before
+				/// </summary>
+				None = 0,
+
+				FoundPath = 1,
+				MapHasAlreadyBeenSearched = 1 << 1
+			}
+
 			/// <summary>
 			/// Searches a path on a given map. The map data is altered in the process and a path is set on it.
 			/// </summary>
 			/// <param name="whatMap">The map to search a path on</param>
 			/// <returns>Whether a path could be found</returns>
-			public static bool searchPathOnMap(WorldMap whatMap)
+			public static SearchResult searchPathOnMap(WorldMap whatMap)
 			{
 				if (whatMap.goal == null || whatMap.start == null)
 					throw new ArgumentException("The provided map does either not have a start or a goal.", "whatMap");
 
-				bool foundPath = false;
+				SearchResult currentResult = SearchResult.None;
 
 				//Initialize open list
 				SortedDictionary<int, List<MapNode>> openList = new SortedDictionary<int, List<MapNode>>();
@@ -33,15 +45,21 @@ namespace A_star_Demo.A_star_Algorithm
 				//Very simple test whether it makes sense to search the map at all
 				if (cache.currentStatus == MapNode.Status.isClosed)
 				{
-					for (int i = 0; i < CIRCLE_TIMEOUT && cache != whatMap.start; i++)
+					currentResult |= SearchResult.MapHasAlreadyBeenSearched;
+
+					cache = whatMap.actualMap[whatMap.goal.Item1][whatMap.goal.Item2][whatMap.goal.Item3];
+					for (int i = 0; i < CIRCLE_TIMEOUT && cache != null && cache != whatMap.start; i++)
 					{
-						if (cache.currentPredesessorNode == null)
-							throw new Exception("Tried to search on a map that has been corrupted.");
 						cache = cache.currentPredesessorNode;
 					}
-					if (cache != whatMap.start)
-						throw new Exception("Map has been altered to contain a circle as a path");
-					else foundPath = true;
+
+					if (cache != null)
+					{
+						if (cache == whatMap.start)
+							currentResult |= SearchResult.FoundPath;
+						else
+							throw new Exception("Map has been altered to contain a circle as a path");
+					}
 				}
 				else
 				{
@@ -58,7 +76,7 @@ namespace A_star_Demo.A_star_Algorithm
 						//Have we found the goal?
 						if (cache == whatMap.goal)
 						{
-							foundPath = true;
+							currentResult = SearchResult.FoundPath;
 							break;
 						}
 						cache.currentStatus |= MapNode.Status.isClosed;
@@ -68,7 +86,7 @@ namespace A_star_Demo.A_star_Algorithm
 
 					//Create the path information on the map data ( This is an extra list for simplicity, the main data has been altered already above )
 					LinkedList<BlockInfo> path = new LinkedList<BlockInfo>();
-					if (foundPath)
+					if (currentResult.HasFlag(SearchResult.FoundPath))
 					{
 						cache = whatMap.actualMap[whatMap.goal.Item1][whatMap.goal.Item2][whatMap.goal.Item3];
 						while (cache.currentPredesessorNode != null)
@@ -81,7 +99,7 @@ namespace A_star_Demo.A_star_Algorithm
 					}
 					whatMap.path = path;
 				}
-				return foundPath;
+				return currentResult;
 			}
 
 			/// <summary>
