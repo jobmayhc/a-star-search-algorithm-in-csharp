@@ -24,8 +24,11 @@ namespace A_star_Demo.Graphics
 		/// </summary>
 		/// <param name="whatControl">The GLControl to use for rendering</param>
 		/// <param name="whatMap">The map to render in the control</param>
-		public Renderer(GLControl whatControl, WorldMap whatMap)
+		public Renderer(GLControl whatControl, WorldMap whatMap, AstarInterface whatInterface)
 		{
+			if (whatInterface == null)
+				throw new ArgumentNullException("whatInterface", "Cannot get selector position from non-existing interface.");
+			AstarInterface = whatInterface;
 			if (whatMap == null)
 				throw new ArgumentNullException("whatMap", "Cannot render a non-existing map");
 			map = whatMap;
@@ -38,8 +41,8 @@ namespace A_star_Demo.Graphics
 			lock (whatMap)
 			{
 				camera = new Camera(
-					new Vector3d(whatMap.xSizeCache / 2, whatMap.ySizeCache / 2, whatMap.zSizeCache / 2 + 23.0),
-					new Vector3d(whatMap.xSizeCache / 2, whatMap.ySizeCache / 2, whatMap.zSizeCache / 2));
+					new Vector3d((double)whatMap.xSizeCache / 2, (double)whatMap.ySizeCache / 2, (double)whatMap.zSizeCache / 2 + whatMap.xSizeCache + CAMERA_HEIGHT_PADDING),
+					new Vector3d((double)whatMap.xSizeCache / 2, (double)whatMap.ySizeCache / 2, (double)whatMap.zSizeCache / 2));
 			}
 			renderTask = Task.Factory.StartNew(rendererMain, TaskCreationOptions.LongRunning);
 		}
@@ -89,7 +92,8 @@ namespace A_star_Demo.Graphics
 			//Create the VAOs for several graphic objects
 			cubeHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Cube);
 			pyramidHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Pyramid);
-			gridHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Grid, 20, 15, 1);
+			gridHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Grid, map.xSizeCache, map.ySizeCache, map.zSizeCache);
+			sizeOfGrid = new Tuple<int, int, int>(map.xSizeCache, map.ySizeCache, map.zSizeCache);
 			selectorGrid = new DataStructures.VBOHandle(DataStructures.ObjectName.Grid, 1, 1, 1, 1.3f, 1.3f, 1.3f);
 
 			RMessage current;
@@ -127,12 +131,28 @@ namespace A_star_Demo.Graphics
 			GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
 			GL.Color3(0.4, 0.4, 0.4);
+
+			//Resize the grid and adjust the camera if necessary
+			if (map.xSizeCache != sizeOfGrid.Item1 || map.ySizeCache != sizeOfGrid.Item2 || map.zSizeCache != sizeOfGrid.Item3)
+			{
+				gridHandle.Dispose();
+				gridHandle = new DataStructures.VBOHandle(DataStructures.ObjectName.Grid, map.xSizeCache, map.ySizeCache, map.zSizeCache);
+				sizeOfGrid = new Tuple<int, int, int>(map.xSizeCache, map.ySizeCache, map.zSizeCache);
+
+				lock (map)
+				{
+					camera.moveCamera(new Vector3d((double)map.xSizeCache / 2, (double)map.ySizeCache / 2, (double)map.zSizeCache / 2 + map.xSizeCache + CAMERA_HEIGHT_PADDING));
+					camera.changeTarget(new Vector3d((double)map.xSizeCache / 2, (double)map.ySizeCache / 2, (double)map.zSizeCache / 2));
+				}
+				Matrix4d cameraCache = camera.cameraMatrix;
+				GL.LoadMatrix(ref cameraCache);
+			}
 			
 			GL.BindVertexArray(gridHandle.VAOName);
 
-			GL.Translate((float)map.xSizeCache / 2 - 0.5, (float)map.ySizeCache / 2 - 0.5, (float)map.zSizeCache / 2 - 0.5);
+			GL.Translate((float)map.xSizeCache / 2, (float)map.ySizeCache / 2, (float)map.zSizeCache / 2);
 			GL.DrawElements(BeginMode.Lines, gridHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-			GL.Translate((float)-map.xSizeCache / 2 + 0.5, (float)-map.ySizeCache / 2 + 0.5, (float)-map.zSizeCache / 2 + 0.5);
+			GL.Translate((float)-map.xSizeCache / 2, (float)-map.ySizeCache / 2, (float)-map.zSizeCache / 2);
 			
 			GL.Enable(EnableCap.Lighting);
 			GL.BindVertexArray(cubeHandle.VAOName);
@@ -144,18 +164,18 @@ namespace A_star_Demo.Graphics
 				{
 					if (info.status.HasFlag(MapNode.Status.isWall))
 					{
-						GL.Translate(info.x, info.y, info.z);
+						GL.Translate(info.x + 0.5, info.y + 0.5, info.z + 0.5);
 						GL.DrawElements(BeginMode.Triangles, cubeHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-						GL.Translate(-info.x, -info.y, -info.z);
+						GL.Translate(-info.x - 0.5, -info.y - 0.5, -info.z - 0.5);
 					}
 				}
 				if (map.start != null)
 				{
 					GL.BindVertexArray(pyramidHandle.VAOName);
-					GL.Translate(map.start.Item1, map.start.Item2, map.start.Item3);
+					GL.Translate(map.start.Item1 + 0.5, map.start.Item2 + 0.5, map.start.Item3 + 0.5);
 					GL.Color3(1.0, 0.0, 0.0);
 					GL.DrawElements(BeginMode.Triangles, pyramidHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-					GL.Translate(-map.start.Item1, -map.start.Item2, -map.start.Item3);
+					GL.Translate(-map.start.Item1 - 0.5, -map.start.Item2 - 0.5, -map.start.Item3 - 0.5);
 				}
 
 				if (map.goal != null)
@@ -164,10 +184,10 @@ namespace A_star_Demo.Graphics
 					if (map.start == null)
 						GL.BindVertexArray(pyramidHandle.VAOName);
 
-					GL.Translate(map.goal.Item1, map.goal.Item2, map.goal.Item3);
+					GL.Translate(map.goal.Item1 + 0.5, map.goal.Item2 + 0.5, map.goal.Item3 + 0.5);
 					GL.Color3(0.0, 1.0, 0.0);
 					GL.DrawElements(BeginMode.Triangles, pyramidHandle.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-					GL.Translate(-map.goal.Item1, -map.goal.Item2, -map.goal.Item3);
+					GL.Translate(-map.goal.Item1 - 0.5, -map.goal.Item2 - 0.5, -map.goal.Item3 - 0.5);
 				}
 
 				GL.Color3(1.0, 0.0, 0.0);
@@ -178,23 +198,21 @@ namespace A_star_Demo.Graphics
 					while (cache.Next != null)
 					{
 						GL.Begin(BeginMode.Lines);
-						GL.Vertex3(cache.Value.x, cache.Value.y, cache.Value.z);
-						GL.Vertex3(cache.Next.Value.x, cache.Next.Value.y, cache.Next.Value.z);
+						GL.Vertex3(cache.Value.x + 0.5, cache.Value.y + 0.5, cache.Value.z + 0.5);
+						GL.Vertex3(cache.Next.Value.x + 0.5, cache.Next.Value.y + 0.5, cache.Next.Value.z + 0.5);
 						GL.End();
 						cache = cache.Next;
 					}
 				}
 			}
-			//Needed to avoid GL.Translates to mismatch because the selector has been changed in between.
-			//The selector uses the renderTask for access.
-			lock (renderTask)
-			{
-				GL.Translate(selector.X, selector.Y, selector.Z);
-				GL.Color3(1.0, 0.4, 0.4);
-				GL.BindVertexArray(selectorGrid.VAOName);
-				GL.DrawElements(BeginMode.Lines, selectorGrid.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
-				GL.Translate(-selector.X, -selector.Y, -selector.Z);
-			}
+			//Cache the selector so it cannot change between the pair of GL.Translates
+			Vector3d selectorCache = AstarInterface.selector;
+			GL.Translate(selectorCache.X + 0.5, selectorCache.Y + 0.5, selectorCache.Z + 0.5);
+			GL.Color3(1.0, 0.4, 0.4);
+			GL.BindVertexArray(selectorGrid.VAOName);
+			GL.DrawElements(BeginMode.Lines, selectorGrid.NumberOfElements, DrawElementsType.UnsignedShort, IntPtr.Zero);
+			GL.Translate(-selectorCache.X - 0.5, -selectorCache.Y - 0.5, -selectorCache.Z - 0.5);
+
 			GLControl.SwapBuffers();
 			GL.BindVertexArray(0);
 		}
@@ -220,27 +238,6 @@ namespace A_star_Demo.Graphics
 			GL.LoadMatrix(ref cameraCache);
 		}
 
-		public Vector3d selector
-		{
-			get
-			{
-				Vector3d cache;
-				lock (renderTask)
-				{
-					cache = _selector;
-				}
-				return cache;
-			}
-			set
-			{
-				lock (renderTask)
-				{
-					_selector = value;
-				}
-			}
-		}
-
-		private Vector3d _selector = new Vector3d(0.0, 0.0, 0.0);
 		private Camera camera;
 		private WorldMap map;
 		private Task renderTask;
@@ -249,7 +246,10 @@ namespace A_star_Demo.Graphics
 		private DataStructures.VBOHandle cubeHandle;
 		private DataStructures.VBOHandle pyramidHandle;
 		private DataStructures.VBOHandle gridHandle;
+		private Tuple<int, int, int> sizeOfGrid;
 		private DataStructures.VBOHandle selectorGrid;
+		private AstarInterface AstarInterface;
 		private const int THREAD_ABORT_TIMEOUT = 1000;
+		private const double CAMERA_HEIGHT_PADDING = 1.0;
 	}
 }

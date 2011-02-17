@@ -49,9 +49,9 @@ namespace A_star_Demo.A_star_Algorithm
 			_goal = whatGoal;
 			canBarelyPassBlocks = false;
 
-			xSizeCache = xSize;
-			ySizeCache = ySize;
-			zSizeCache = zSize;
+			xSizeCache = xDataSize = xSize;
+			ySizeCache = yDataSize = ySize;
+			zSizeCache = zDataSize = zSize;
 
 			//Create the buckets for each possible x value
 			for (int a = 0; a < xSize; a++)
@@ -523,14 +523,170 @@ namespace A_star_Demo.A_star_Algorithm
 			else cache.initializeNode(goal, false);
 		}
 
+		public void resizeMap(int whatX, int whatY, int whatZ)
+		{
+			shrink(whatX, whatY, whatZ);
+			grow(whatX, whatY, whatZ);
+		}
+
+		/// <summary>
+		/// Enlarges the map to the given size.
+		/// This does nothing if the present size is larger than the given one.
+		/// </summary>
+		/// <param name="whatX">Non-null-based x size</param>
+		/// <param name="whatY">Non-null-based y size</param>
+		/// <param name="whatZ">Non-null-based z size</param>
+		private void grow(int whatX, int whatY, int whatZ)
+		{
+			List<List<MapNode>> yBucketCache;
+			List<MapNode> zBucketCache;
+			int xStore, yStore;
+
+			//Do this now where the map is still small. All new nodes will be initialized anyways.
+			reinitializeMap();
+
+			if (whatX > xDataSize)
+			{
+				//Add new x buckets and update them to the current y and z size
+				for (int a = xDataSize; a < whatX; a++)
+				{
+					yBucketCache = new List<List<MapNode>>();
+					for (int b = 0; b < yDataSize; b++)
+					{
+						zBucketCache = new List<MapNode>();
+						for (int c = 0; c < zDataSize; c++)
+						{
+							zBucketCache.Add(new MapNode(a, b, c, goal));
+						}
+						yBucketCache.Add(zBucketCache);
+					}
+					actualMap.Add(yBucketCache);
+				}
+				xDataSize = whatX;
+			}
+			xSizeCache = whatX;
+
+			if (whatY > yDataSize)
+			{
+				
+				//Add new y buckets and update them to the current z size
+				foreach (List<List<MapNode>> yBucket in actualMap)
+				{
+					xStore = yBucket.First().First().x;
+					for (int b = yDataSize; b < whatY; b++)
+					{
+						zBucketCache = new List<MapNode>();
+						for (int c = 0; c < zDataSize; c++)
+						{
+							zBucketCache.Add(new MapNode(xStore, b, c, goal));
+						}
+						yBucket.Add(zBucketCache);
+					}
+				}
+				yDataSize = whatY;
+			}
+			ySizeCache = whatY;
+
+			if (whatZ > zDataSize)
+			{
+				//Add new z nodes
+				foreach (List<List<MapNode>> yBucket in actualMap)
+				{
+					xStore = yBucket.First().First().x;
+					foreach (List<MapNode> zBucket in yBucket)
+					{
+						yStore = zBucket.First().y;
+						for (int c = zDataSize; c < whatZ; c++)
+						{
+							zBucket.Add(new MapNode(xStore, yStore, c, goal));
+						}
+					}
+				}
+				zDataSize = whatZ;
+			}
+			zSizeCache = whatZ;
+		}
+
+		/// <summary>
+		/// Removes all lists and nodes that are in higher coordinates that the given ones.
+		/// This does nothing if the present size is equal or smaller to the given one.
+		/// </summary>
+		/// <param name="whatX">Non-null-based x size</param>
+		/// <param name="whatY">Non-null-based y size</param>
+		/// <param name="whatZ">Non-null-based z size</param>
+		private void shrink(int whatX, int whatY, int whatZ)
+		{
+			if (whatX < 1 || whatY < 1 || whatZ < 1)
+				throw new ArgumentOutOfRangeException("whatX | whatY | whatZ", "None of the sizes can be below one. The map would collapse.");
+
+			int partialDataSizeCache;
+
+			//Cull all x buckets that are out of range
+			while (xDataSize > whatX)
+			{
+				actualMap.RemoveAt(xDataSize - 1);
+				xDataSize--;
+			}
+			xSizeCache = whatX;
+
+			//Cull all y buckets that are out of range
+			foreach (List<List<MapNode>> yBucket in actualMap)
+			{
+				partialDataSizeCache = yDataSize;
+				while (partialDataSizeCache > whatY)
+				{
+					yBucket.RemoveAt(partialDataSizeCache - 1);
+					partialDataSizeCache--;
+				}
+
+				//Cull all z nodes that are out of range, we can do this in the same iteration
+				foreach (List<MapNode> zBucket in yBucket)
+				{
+					partialDataSizeCache = zDataSize;
+					while (partialDataSizeCache > whatZ)
+					{
+						zBucket.RemoveAt(partialDataSizeCache - 1);
+						partialDataSizeCache--;
+					}
+				}
+			} 
+			ySizeCache = yDataSize = yDataSize > whatY ? whatY : yDataSize;
+			zSizeCache = zDataSize = zDataSize > whatZ ? whatZ : zDataSize;
+
+			if (goal != null && (goal.Item1 > xSizeCache - 1 || goal.Item2 > ySizeCache - 1 || goal.Item3 > zSizeCache))
+				goal = null;
+
+			if (start != null && (start.Item1 > xSizeCache - 1 || start.Item2 > ySizeCache - 1 || start.Item3 > zSizeCache))
+				start = null;
+
+			reinitializeMap();
+		}
+
 		public LinkedList<BlockInfo> path { get; private set; }
 		public bool canBarelyPassBlocks { get; set; }
+
+		/// <summary>
+		/// Not null based. Shows the x size of the currently usable map
+		/// </summary>
 		public int xSizeCache { get; private set; }
+
+		/// <summary>
+		/// Not null based. Shows the y size of the currently usable map
+		/// </summary>
 		public int ySizeCache { get; private set; }
+
+		/// <summary>
+		/// Not null based. Shows the z size of the currently usable map
+		/// </summary>
 		public int zSizeCache { get; private set; }
 
 		private List<List<List<MapNode>>> actualMap = new List<List<List<MapNode>>>();
 		private Tuple<int, int, int> _goal;
 		private Tuple<int, int, int> _start;
+		
+		/// <summary>
+		/// Similar to the caches, this is not null based. Shows the actual size of the stored data.
+		/// </summary>
+		private int xDataSize, yDataSize, zDataSize;
 	}
 }
